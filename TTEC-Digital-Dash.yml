@@ -1,0 +1,846 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "TTEC-Digital Cloud Formation Template - Dashboards/Alerts"
+
+Parameters:
+  InstanceRegion:
+    Type: String
+    Description: AWS Instance Region
+    
+  ClientName:
+    Type: String
+    Description: Name of the client
+
+  InstanceId:
+    Type: String
+    Description: AWS Connect instance ID/ARN
+
+
+
+Resources:
+  MonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "${ClientName}-Call-Center-Monitoring-Dashboard"
+      DashboardBody: !Sub |
+        {
+            "start": "-PT3H",
+            "periodOverride": "inherit",
+            "widgets": 
+            [
+                {
+                    "height": 3,
+                    "width": 3,
+                    "y": 0,
+                    "x": 0,
+                    "type": "metric",
+                    "properties": 
+                        {
+                            "view": "singleValue",
+                            "title": "Total Calls",
+                            "region": "${InstanceRegion}",
+                            "metrics": 
+                            [
+                                    [ 
+                                    "AWS/Connect", "CallsPerInterval", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls", { "period": 60, "stat": "Sum", "label": "Calls Per Interval" } 
+                                    ]
+                            ],
+                            "liveData": false,
+                            "period": 300
+                        }
+                },
+                {
+                    "height": 3,
+                    "width": 3,
+                    "y": 0,
+                    "x": 3,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "singleValue",
+                        "title": "Missed Calls",
+                        "region": "${InstanceRegion}",
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect", "MissedCalls", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls", { "period": 60, "stat": "Sum", "label": "Missed Calls", "color": "#d62728" }
+                            ]
+                        ],
+                        "liveData": false,
+                        "period": 300
+                    }
+                },
+                {
+                    "height": 3,
+                    "width": 3,
+                    "y": 3,
+                    "x": 0,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "singleValue",
+                        "title": "Lambda Errors - Overall",
+                        "region": "${InstanceRegion}",
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Lambda", "Errors", "InstanceId", "${InstanceId}", {"period": 60, "stat": "Sum","color": "#d62728"}
+                            ]
+                        ],
+                        "liveData": false,
+                        "period": 300
+                    }
+                },
+                {
+                    "height": 3,
+                    "width": 3,
+                    "y": 3,
+                    "x": 3,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "singleValue",
+                        "title": "Queue",
+                        "region": "${InstanceRegion}",
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect", "QueueAnswerTime", "Queue", "*", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls", { "period": 60, "stat": "Average", "label": "Avg Wait Time" }
+                            ]
+                        ],
+                        "liveData": false,
+                        "period": 300
+                    }
+                },{
+                    "type": "metric",
+                    "x": 6,
+                    "y": 0,
+                    "width": 6,
+                    "height": 6,
+                    "properties": 
+                    {
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect",
+                                "ThrottledCalls",
+                                "InstanceArn",
+                                "${InstanceId}"
+                            ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${InstanceRegion}",
+                        "title": "Amazon Connect Throttled Calls",
+                        "period": 300,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "min": 0,
+                                "label": "Number of Throttled Calls"
+                            }
+                        },
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Throttling Alert",
+                                    "value": 10,
+                                    "fill": "above"
+                                }
+                            ]
+                        }
+                    }
+                },           
+                {
+                    "height": 6,
+                    "width": 6,
+                    "y": 0,
+                    "x": 12,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect",
+                                "ConcurrentCallsPercentage",
+                                "InstanceId",
+                                "${InstanceId}",
+                                "MetricGroup",
+                                "VoiceCalls",
+                                {
+                                    "visible": false
+                                }
+                            ],
+                            [
+                                ".",
+                                "ConcurrentCalls",
+                                ".",
+                                ".",
+                                ".",
+                                ".",
+                                {
+                                    "visible": false
+                                }
+                            ],
+                            [
+                                ".",
+                                "CallsPerInterval",
+                                ".",
+                                ".",
+                                ".",
+                                ".",
+                                {
+                                    "visible": false
+                                }
+                            ],
+                            [
+                                ".",
+                                "MissedCalls",
+                                ".",
+                                ".",
+                                ".",
+                                "."
+                            ],
+                            [
+                                ".",
+                                "CallRecordingUploadError",
+                                ".",
+                                ".",
+                                ".",
+                                "CallRecordings",
+                                {
+                                    "visible": false
+                                }
+                            ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${InstanceRegion}",
+                        "title": "Missed Calls - Over Time",
+                        "period": 300,
+                        "stat": "Average",
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Calls",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm",
+                                    "value": 20
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 6,
+                    "y": 0,
+                    "x": 18,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect",
+                                "CallsPerInterval",
+                                "InstanceId",
+                                "${InstanceId}",
+                                "MetricGroup",
+                                "VoiceCalls",
+                                {
+                                    "visible": false
+                                }
+                            ],
+                            [
+                                ".",
+                                "ConcurrentCallsPercentage",
+                                ".",
+                                ".",
+                                ".",
+                                ".",
+                                {
+                                    "visible": false
+                                }
+                            ],
+                            [
+                                ".",
+                                "ConcurrentCalls",
+                                ".",
+                                ".",
+                                ".",
+                                "."
+                            ],
+                            [
+                                ".",
+                                "MissedCalls",
+                                ".",
+                                ".",
+                                ".",
+                                ".",
+                                {
+                                    "visible": false
+                                }
+                            ],
+                            [
+                                ".",
+                                "CallRecordingUploadError",
+                                ".",
+                                ".",
+                                ".",
+                                "CallRecordings",
+                                {
+                                    "visible": false
+                                }
+                            ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${InstanceRegion}",
+                        "title": "Concurrent Calls - All Calls",
+                        "period": 300,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "miliseconds",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "stat": "Average",
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm Threshold",
+                                    "value": 120
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 6,
+                    "y": 6,
+                    "x": 0,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Lambda",
+                                "Errors",
+                                {
+                                    "period": 60,
+                                    "stat": "Sum",
+                                    "color": "#d62728"
+                                }
+                            ]
+                        ],
+                        "region": "${InstanceRegion}",
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Errors",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm Threshold",
+                                    "value": 1
+                                }
+                            ]
+                        },
+                        "title": "Lambda Errors - Overall",
+                        "period": 300
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 18,
+                    "x": 6,
+                    "y": 6,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "singleValue",
+                        "stacked": false,
+                        "metrics": 
+                        [
+                            [
+                                {
+                                    "expression": "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Errors\"', 'Sum', 300)"
+                                }
+                            ]
+                        ],
+                        "region": "${InstanceRegion}",
+                        "title": "Lambda Errors - By Lambda",
+                        "period": 300,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Errors",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm Threshold",
+                                    "value": 600,
+                                    "fill": "above"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 6,
+                    "y": 23,
+                    "x": 0,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Lambda",
+                                "Duration",
+                                {
+                                    "region": "${InstanceRegion}",
+                                    "color": "#ff9896",
+                                    "label": "Duration"
+                                }
+                            ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${InstanceRegion}",
+                        "period": 60,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Milliseconds",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "stat": "Sum",
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm Threshold (15 Minutes)",
+                                    "value": 900000
+                                }
+                            ]
+                        },
+                        "title": "Lambda Execution Duration"
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 6,
+                    "y": 12,
+                    "x": 0,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "timeSeries",
+                        "metrics": 
+                        [
+                            [
+                                {
+                                    "expression": "SEARCH('{AWS/Connect,ContactFlowName,InstanceId,MetricGroup}', 'Sum', 300)",
+                                    "id": "e1",
+                                    "period": 300,
+                                    "color": "#d62728"
+                                }
+                            ]
+                        ],
+                        "region": "${InstanceRegion}",
+                        "period": 300,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Errors",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "title": "Contact Flow Errors - Overall"
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 18,
+                    "y": 12,
+                    "x": 6,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "singleValue",
+                        "metrics": 
+                        [
+                            [
+                                {
+                                    "expression": "SEARCH('{AWS/Connect,ContactFlowName,InstanceId,MetricGroup}', 'Sum', 300)",
+                                    "id": "e1",
+                                    "period": 300,
+                                    "color": "#d62728"
+                                }
+                            ]
+                        ],
+                        "region": "${InstanceRegion}",
+                        "period": 300,
+                        "title": "Contact Flow Errors - By Contact Flow"
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 6,
+                    "y": 18,
+                    "x": 0,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "metrics": 
+                        [
+                            [
+                                {
+                                    "expression": "SEARCH('{AWS/Connect,QueueName} MetricName=\"QueueWaitTime\"', 'Sum', 300)"
+                                }
+                            ]
+                        ],
+                        "region": "${InstanceRegion}",
+                        "title": "Queue Wait Time - By Queue",
+                        "period": 300,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Seconds in Queue",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm Threshold",
+                                    "value": 600,
+                                    "fill": "above"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "height": 6,
+                    "width": 18,
+                    "x": 6,
+                    "y": 18,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "view": "singleValue",
+                        "metrics": 
+                        [
+                            [
+                                {
+                                    "expression": "SEARCH('{AWS/Connect,Queue} MetricName=\"ContactsInQueue\"', 'Sum', 300)"
+                                }
+                            ]
+                        ],
+                        "region": "${InstanceRegion}",
+                        "title": "Queue Wait Time - By Queue",
+                        "period": 300
+                    }
+                },
+                {
+                    "type": "metric",
+                    "x": 6,
+                    "y": 24,
+                    "width": 6,
+                    "height": 6,
+                    "properties": 
+                    {
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect",
+                                "ThrottledCalls",
+                                "InstanceArn",
+                                "${InstanceId}"
+                            ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${InstanceRegion}",
+                        "title": "Amazon Connect Throttled Calls",
+                        "period": 300,
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "min": 0,
+                                "label": "Number of Throttled Calls"
+                            }
+                        },
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Throttling Alert",
+                                    "value": 10,
+                                    "fill": "above"
+                                }
+                            ]
+                        }
+                    }
+                }, {
+                    "height": 6,
+                    "width": 6,
+                    "y": 24,
+                    "x": 12,
+                    "type": "metric",
+                    "properties": 
+                    {
+                        "metrics": 
+                        [
+                            [
+                                "AWS/Connect",
+                                "ToInstancePacketLossRate",
+                                "Participant",
+                                "Agent",
+                                "Type of Connection",
+                                "WebRTC",
+                                "Instance ID",
+                                "${InstanceId}",
+                                "Stream Type",
+                                "Voice",
+                                {
+                                    "period": 60,
+                                    "stat": "Average",
+                                    "color": "#2ca02c"
+                                }
+                            ],
+                            [
+                                "...",
+                                {
+                                    "period": 60,
+                                    "stat": "Maximum",
+                                    "color": "#d62728"
+                                }
+                            ]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": false,
+                        "region": "${InstanceRegion}",
+                        "title": "Instance Packet Loss",
+                        "yAxis": 
+                        {
+                            "left": 
+                            {
+                                "label": "Packet",
+                                "showUnits": false
+                            },
+                            "right": 
+                            {
+                                "label": "Time",
+                                "showUnits": false
+                            }
+                        },
+                        "period": 300,
+                        "liveData": true,
+                        "annotations": 
+                        {
+                            "horizontal": 
+                            [
+                                {
+                                    "label": "Alarm Threshold",
+                                    "value": 0.8
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: Gladwyne
+      DisplayName: Gladwyne-Topic
+
+  ConcurrentCallsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "Concurrent Calls - Alarm - All Calls"
+      AlarmDescription: "Call Center Concurrent Calls"
+      MetricName: ConcurrentCalls
+      Namespace: AWS/Connect
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 250
+      ComparisonOperator: GreaterThanThreshold
+      Unit: Count
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  LambdaErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "Lambda Errors - All Lambdas"
+      AlarmDescription: "Alarm for Lambda Errors"
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: ignore
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  LambdaDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "Lambda Execution Duration - Overall"
+      AlarmDescription: "Alarm for detecting when Lambdas have been running too long."
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 900
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: missing
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  PacketLossAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "Instance Packet Loss"
+      AlarmDescription: "Call center alarm for monitoring when one or more transmitted data packets fail to arrive at their destination"
+      MetricName: ToInstancePacketLoss
+      Namespace: AWS/Connect
+      Statistic: Average
+      Dimensions:
+        - Name: Participant
+          Value: Agent
+        - Name: "Type of Connection"
+          Value: WebRTC
+        - Name: "Instance ID"
+          Value: !Ref InstanceId
+        - Name: "Stream Type"
+          Value: Voice
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 0.95
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: missing
+      AlarmActions:
+        - !Ref AlarmTopic
+
+  MissedCallsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "Missed Calls"
+      AlarmDescription: "Call center alarm for monitoring missed calls within designated period."
+      MetricName: MissedCalls
+      Namespace: AWS/Connect
+      Statistic: Maximum
+      Dimensions:
+        - Name: MetricGroup
+          Value: VoiceCalls
+        - Name: InstanceId
+          Value: !Ref InstanceId
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 20
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: ignore
+      AlarmActions:
+        - !Ref AlarmTopic
+
+Outputs:
+  DashboardURL:
+    Description: URL for the created CloudWatch Dashboard
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${ClientName}-Call-Center-Monitoring-Dashboard"
+
+  AlarmTopicARN:
+    Description: ARN of the SNS Topic for alarms
+    Value: !Ref AlarmTopic
