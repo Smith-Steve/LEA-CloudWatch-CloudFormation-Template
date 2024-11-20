@@ -41,7 +41,7 @@ Resources:
                             "metrics": 
                             [
                                     [ 
-                                    "AWS/Connect", "CallsPerInterval", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls", { "period": 60, "stat": "Sum", "label": "Calls Per Interval" } 
+                                    "AWS/Connect", "CallsPerInterval", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls" 
                                     ]
                             ],
                             "liveData": false,
@@ -81,11 +81,16 @@ Resources:
                         "title": "Lambda Errors - Overall",
                         "region": "${InstanceRegion}",
                         "metrics": 
-                        [
                             [
-                                "AWS/Lambda", "Errors", "InstanceId", "${InstanceId}", {"period": 60, "stat": "Sum","color": "#d62728"}
-                            ]
-                        ],
+                                [
+                                    "AWS/Lambda",
+                                    "Errors",
+                                    {
+                                        "stat": "Sum",
+                                        "color": "#d62728"
+                                    }
+                                ]
+                            ],
                         "liveData": false,
                         "period": 300
                     }
@@ -104,7 +109,7 @@ Resources:
                         "metrics": 
                         [
                             [
-                                "AWS/Connect", "QueueAnswerTime", "Queue", "*", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls", { "period": 60, "stat": "Average", "label": "Avg Wait Time" }
+                                "AWS/Connect", "QueueAnswerTime", "Queue", "*", "InstanceId", "${InstanceId}", "MetricGroup", "VoiceCalls", { "period": 300, "stat": "Average", "label": "Avg Wait Time" }
                             ]
                         ],
                         "liveData": false,
@@ -357,7 +362,7 @@ Resources:
                                 "AWS/Lambda",
                                 "Errors",
                                 {
-                                    "period": 60,
+                                    "period": 300,
                                     "stat": "Sum",
                                     "color": "#d62728"
                                 }
@@ -461,7 +466,7 @@ Resources:
                         "view": "timeSeries",
                         "stacked": false,
                         "region": "${InstanceRegion}",
-                        "period": 60,
+                        "period": 300,
                         "yAxis": 
                         {
                             "left": 
@@ -502,7 +507,7 @@ Resources:
                         [
                             [
                                 {
-                                    "expression": "SEARCH('{AWS/Connect,ContactFlowName,InstanceId,MetricGroup}', 'Sum', 300)",
+                                    "expression": "SEARCH('{AWS/Connect,ContactFlowName} MetricName=\"ContactFlowErrors\"', 'Sum', 300)",
                                     "id": "e1",
                                     "period": 300,
                                     "color": "#d62728"
@@ -528,30 +533,41 @@ Resources:
                     }
                 },
                 {
-                    "height": 6,
-                    "width": 18,
-                    "y": 12,
-                    "x": 6,
-                    "type": "metric",
-                    "properties": 
-                    {
-                        "view": "singleValue",
-                        "metrics": 
+                "height": 6,
+                "width": 18,
+                "y": 12,
+                "x": 6,
+                "type": "metric",
+                "properties": {
+                    "view": "singleValue",
+                    "metrics": [
                         [
-                            [
-                                {
-                                    "expression": "SEARCH('{AWS/Connect,ContactFlowName,InstanceId,MetricGroup}', 'Sum', 300)",
-                                    "id": "e1",
-                                    "period": 300,
-                                    "color": "#d62728"
-                                }
-                            ]
+                            "AWS/Connect",
+                            "ContactFlowErrors",
+                            "InstanceId",
+                            "${InstanceId}",
+                            { "id": "m1" }
                         ],
-                        "region": "${InstanceRegion}",
-                        "period": 300,
-                        "title": "Contact Flow Errors - By Contact Flow"
-                    }
-                },
+                        [
+                            {
+                                "expression": "SEARCH('{AWS/Connect,ContactFlowName,InstanceId,MetricGroup}', 'Sum', 300)",
+                                "id": "e1",
+                                "label": "Errors by Flow",
+                                "period": 300
+                            }
+                        ]
+                    ],
+                    "region": "${InstanceRegion}",
+                    "period": 300,
+                    "title": "Contact Flow Errors - By Contact Flow",
+                    "yAxis": {
+                        "left": {
+                            "min": 0
+                        }
+                    },
+                    "stacked": false
+                }
+            },
                 {
                     "height": 6,
                     "width": 6,
@@ -620,54 +636,11 @@ Resources:
                         "title": "Queue Wait Time - By Queue",
                         "period": 300
                     }
-                },
-                {
-                    "type": "metric",
-                    "x": 6,
-                    "y": 24,
-                    "width": 6,
-                    "height": 6,
-                    "properties": 
-                    {
-                        "metrics": 
-                        [
-                            [
-                                "AWS/Connect",
-                                "ThrottledCalls",
-                                "InstanceArn",
-                                "${InstanceId}"
-                            ]
-                        ],
-                        "view": "timeSeries",
-                        "stacked": false,
-                        "region": "${InstanceRegion}",
-                        "title": "Amazon Connect Throttled Calls",
-                        "period": 300,
-                        "yAxis": 
-                        {
-                            "left": 
-                            {
-                                "min": 0,
-                                "label": "Number of Throttled Calls"
-                            }
-                        },
-                        "annotations": 
-                        {
-                            "horizontal": 
-                            [
-                                {
-                                    "label": "Throttling Alert",
-                                    "value": 10,
-                                    "fill": "above"
-                                }
-                            ]
-                        }
-                    }
                 }, {
                     "height": 6,
                     "width": 6,
                     "y": 24,
-                    "x": 12,
+                    "x": 6,
                     "type": "metric",
                     "properties": 
                     {
@@ -685,7 +658,7 @@ Resources:
                                 "Stream Type",
                                 "Voice",
                                 {
-                                    "period": 60,
+                                    "period": 300,
                                     "stat": "Average",
                                     "color": "#2ca02c"
                                 }
@@ -693,7 +666,7 @@ Resources:
                             [
                                 "...",
                                 {
-                                    "period": 60,
+                                    "period": 300,
                                     "stat": "Maximum",
                                     "color": "#d62728"
                                 }
@@ -728,6 +701,23 @@ Resources:
                                 }
                             ]
                         }
+                    }
+                },
+                {
+                    "type": "logs-insights",
+                    "x": 18,
+                    "y": 24,
+                    "width": 6,
+                    "height": 6,
+                    "properties": 
+                    {
+                        "query": "fields @message\n| filter @message like /ERROR/ or @message like /Exception/\n| parse @message '\"ContactFlowName\":\"*\"'.as(ContactFlowName)\n| stats count(*) as ErrorCount by ContactFlowName\n| sort ErrorCount desc",
+                        "region": "${InstanceRegion}",
+                        "title": "Contact Flow Error Counts",
+                        "logGroupNames": [
+                        "/aws/connect/vf-helpdesk-dev"
+                        ],
+                        "view": "table"
                     }
                 }
             ]
