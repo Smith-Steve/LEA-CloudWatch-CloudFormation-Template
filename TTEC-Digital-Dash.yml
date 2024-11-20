@@ -582,7 +582,7 @@ Resources:
                         [
                             [
                                 {
-                                    "expression": "SEARCH('{AWS/Connect,QueueName} MetricName=\"QueueWaitTime\"', 'Sum', 300)"
+                                    "expression": "SEARCH('{AWS/Connect,QueueName, InstanceId, MetricGroup}', 'Average', 300)", "id": "e1", "period": 300, "region": "${InstanceRegion}"
                                 }
                             ]
                         ],
